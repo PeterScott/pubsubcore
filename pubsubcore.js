@@ -2,7 +2,7 @@
 
 var sys  = require('sys');
 var sets = require('simplesets');
-var io   = require('/Users/pjscott/web/socket.io-node')
+var io   = require('socket.io')
 
 //////////////////////////////
 // Tracking who's in what room
