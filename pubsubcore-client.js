@@ -1,84 +1,84 @@
 // PubSubCore client code. Requires that the Socket.IO client code be
 // loaded first.
 
-var PubSubCore = {
-    connected: false,
-    
-    join_room: function(username, room) {
-	PubSubCore.socket.send({connect: {name: username, room: room}});
-    },
+// Create with "new PubSubCore(socket)". Socket is optional.
+function PubSubCore(socket) {
+    var self = this;
+    this.connected = false;
 
-    send: function(channel, msg) {
+    this.join_room = function(username, room) {
+	self.socket.send({connect: {name: username, room: room}});
+    };
+
+    this.send = function(channel, msg) {
 	msg.channel = channel;
-	PubSubCore.socket.send(msg);
-    },
+	self.socket.send(msg);
+    };
 
     // Raw event handlers, for clients who want them.
-    onconnect: function() {},
-    ondisconnect: function() {},
-    onmessage: function() {},
-
+    this.onconnect = function() {};
+    this.ondisconnect = function() {};
+    this.onmessage = function() {};
+    
     // Higher-level handlers
-    onerror: function(msg) {
+    this.onerror = function(msg) {
 	console.log("PubSubCore Error:", msg);
-    },
-    onannounce: function(msg) {
+    };
+    this.onannounce = function(msg) {
 	console.log("PubSubCore Announcement:", msg);
-    },
+    };
 
     // List of [regexp, msg_handler] pairs
-    handlers: [],
+    this.handlers = [];
 
-    add_handler: function(regexp, handler) {
-	PubSubCore.handlers.push([regexp, handler]);
-    },
+    this.add_handler = function(regexp, handler) {
+	self.handlers.push([regexp, handler]);
+    };
 
-    default_handler: function() {},
+    this.default_handler = function() {};
 
-    connect: function() {
-	PubSubCore.socket.connect();
+    this.connect = function() {
+	self.socket.connect();
 	setTimeout(function() {
-	    if (!PubSubCore.connected) PubSubCore.connect();
+	    if (!self.connected) self.connect();
 	});
-    }
-};
+    };
 
-(function() {
-    var socket = new io.Socket();
-    PubSubCore.socket = socket;
-
-    socket.on('connect', function() {
-	PubSubCore.connected = true;
+    this.socket = socket || new io.Socket();
+    this.socket.on('connect', function() {
+	self.connected = true;
 	console.log("PubSubCore: Connected to server");
-	PubSubCore.onconnect();
+	self.onconnect();
     });
 
-    socket.on('disconnect', function() {
-	PubSubCore.connected = false;
+    this.socket.on('disconnect', function() {
+	self.connected = false;
 	console.log("PubSubCore: Server connection lost");
-	setTimeout(PubSubCore.connect, 5000);  // Reconnect in 5 seconds
+	setTimeout(self.connect, 5000);  // Reconnect in 5 seconds
     });
 
-    socket.on('message', function(msg) {
-	PubSubCore.onmessage(msg);
+    this.socket.on('message', function(msg) {
+	console.log('MSG:', msg);
+	console.log(self.onmessage);
+	self.onmessage(msg);
 	
 	if (msg.hasOwnProperty('error'))
-	    PubSubCore.onerror(msg);
+	    self.onerror(msg);
 	else if (msg.hasOwnProperty('announcement'))
-	    PubSubCore.onannounce(msg);
+	    self.onannounce(msg);
 	else if (!msg.hasOwnProperty('room'))
-	    PubSubCore.onerror({error: "No room specified", msg: msg});
+	    self.onerror({error: "No room specified", msg: msg});
 	else {
-	    for (var i = 0; i < PubSubCore.handlers.length; i++) {
-		var this_handler = PubSubCore.handlers[i][0];
+	    for (var i = 0; i < self.handlers.length; i++) {
+		var this_handler = self.handlers[i][0];
 		if (typeof this_handler === "string" && this_handler === msg.room
 		    || typeof this_handler === "function" && this_handler.test(msg.room)) {
-		    PubSubCore.handlers[i][1](msg);
+		    self.handlers[i][1](msg);
 		    return;
 		}
 	    }
 	    // No handler found
-	    PubSubCore.default_handler(msg);
+	    self.default_handler(msg);
 	}
     });
-})();
+}
