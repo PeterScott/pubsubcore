@@ -37,11 +37,29 @@ function PubSubCore(socket) {
 
     this.default_handler = function() {};
 
+    this.reconnects = 0;
+
+    function rand_range(a, b) {
+	return a + Math.random() * (b - a);
+    }
+
+    function backoff_time() {
+	var R = rand_range(1, 2);
+	var backoff = Math.min(R * 300 * Math.pow(2, self.reconnects), rand_range(5000, 10000));
+	console.log("PubSubCore: Backoff time: " + backoff + " ms");
+	return backoff;
+    }
+
     this.connect = function() {
 	self.socket.connect();
 	setTimeout(function() {
-	    if (!self.connected) self.connect();
-	}, 5000);
+	    if (!self.connected) { 
+		self.reconnects++;
+		self.connect();
+	    } else {
+		self.reconnects = 0;
+	    }	    
+	}, backoff_time());
     };
 
     this.socket = socket || new io.Socket();
@@ -54,12 +72,10 @@ function PubSubCore(socket) {
     this.socket.on('disconnect', function() {
 	self.connected = false;
 	console.log("PubSubCore: Server connection lost");
-	setTimeout(self.connect, 5000);  // Reconnect in 5 seconds
+	setTimeout(self.connect, backoff_time());
     });
 
     this.socket.on('message', function(msg) {
-	console.log('MSG:', msg);
-	console.log(self.onmessage);
 	self.onmessage(msg);
 	
 	if (msg.hasOwnProperty('error'))
