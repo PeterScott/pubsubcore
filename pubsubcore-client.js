@@ -30,12 +30,7 @@ var PubSubCore = {
     handlers: [],
 
     add_handler: function(regexp, handler) {
-	var re2;
-	if (typeof(regexp) == 'string')
-	    re2 = {test: function(str) { return str === regexp; }};
-	else 
-	    re2 = regexp;
-	PubSubCore.handlers.push([re2, handler]);
+	PubSubCore.handlers.push([regexp, handler]);
     },
 
     default_handler: function() {},
@@ -74,11 +69,14 @@ var PubSubCore = {
 	else if (!msg.hasOwnProperty('room'))
 	    PubSubCore.onerror({error: "No room specified", msg: msg});
 	else {
-	    for (var i = 0; i < PubSubCore.handlers.length; i++)
-		if (PubSubCore.handlers[i][0].test(msg.room)) {
+	    for (var i = 0; i < PubSubCore.handlers.length; i++) {
+		var this_handler = PubSubCore.handlers[i][0];
+		if (typeof this_handler === "string" && this_handler === msg.room
+		    || typeof this_handler === "function" && this_handler.test(msg.room)) {
 		    PubSubCore.handlers[i][1](msg);
 		    return;
 		}
+	    }
 	    // No handler found
 	    PubSubCore.default_handler(msg);
 	}

@@ -67,19 +67,18 @@ var handlers = [];
 // handler takes a Socket.IO client object and a JSON message as
 // arguments. The message has a room property.
 exports.add_handler = function(regexp, handler) {
-    var re2;
-    if (typeof(regexp) == 'string')
-	re2 = {test: function(str) { return str === regexp; }};
-    else re2 = regexp;
     handlers.push([regexp, handler]);
 }
 
 // Return the handler function for a given channel, or a default
 // handler if none was found.
 function get_handler(channel) {
-    for (var i = 0; i < handlers.length; i++)
-	if (handlers[i][0].test(channel))
+    for (var i = 0; i < handlers.length; i++) {
+	var this_handler = handlers[i][0];
+	if (typeof this_handler === "string" && this_handler === channel
+	    || typeof this_handler === "function" && this_handler.test(channel))
 	    return handlers[i][1];
+    }
     // If no handler was found, return a default function.
     return function(client, msg) {
 	client.send({error: 'No handler for channel "' + channel + '"'});
