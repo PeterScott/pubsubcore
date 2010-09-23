@@ -41,7 +41,7 @@ function PubSubCore(socket) {
 	self.socket.connect();
 	setTimeout(function() {
 	    if (!self.connected) self.connect();
-	});
+	}, 5000);
     };
 
     this.socket = socket || new io.Socket();
