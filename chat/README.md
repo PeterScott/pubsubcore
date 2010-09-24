@@ -10,3 +10,5 @@ To compile app.coffee so you can run the example, use this command:
 If you don't have CoffeeScript installed, you can get it with npm:
 
     $ npm install coffee-script
+    
+This example requires [paperboy](http://github.com/felixge/node-paperboy/), for serving the static files. This should not be used in production, but it will do for a simple example.

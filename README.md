@@ -17,4 +17,4 @@ To install the latest version:
 Usage
 ----------
 
-FIXME. This is still a double-plus pre-alpha unrelease. There'll be a web chat example coming as soon as I port it over.
+Check the chat example in `chat/` for an idea of how to use it. This is still a pre-pre-alpha double plus unrelease, so the documentation isn't there yet.
