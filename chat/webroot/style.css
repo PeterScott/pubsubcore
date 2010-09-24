@@ -1,0 +1,25 @@
+#chatwindow {
+    background: #bbf;
+    border: thin black solid;
+    width: 30em;
+    height: 50em;
+}
+
+#chatline {
+    width: 43em;
+}
+
+#chat {
+    display: none;
+}
+
+#signin {
+    border: thin black solid;
+    padding: 2em;
+    margin: 3em;
+    text-align: center;
+}
+
+#signin b {
+    margin-right: 1em;
+}
