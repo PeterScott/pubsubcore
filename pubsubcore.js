@@ -10,6 +10,8 @@ var io   = require('socket.io')
 
 // Dict mapping room names with people to sets of client objects.
 var rooms = {};
+// Dict mapping room names with people to sets of usernames.
+var room_users = {};
 // Dict mapping sids to sets of rooms.
 var sid_rooms = {};
 
@@ -17,10 +19,16 @@ var sid_rooms = {};
 // return the sid:client mapping.
 function add_to_room(client, room, callback) {
     console.log('Client ' + client.username + ' (' + client.sessionId + ') added to room ' + room);
+
     if (!(sid_rooms.hasOwnProperty(client.sessionId))) sid_rooms[client.sessionId] = new sets.Set();
     sid_rooms[client.sessionId].add(room);
+
     if (!(rooms.hasOwnProperty(room))) rooms[room] = new sets.Set();
     rooms[room].add(client);
+
+    if (!(room_users.hasOwnProperty(room))) room_users[room] = new sets.Set();
+    room_users[room].add(client.username);
+
     callback(rooms[room].array());
 }
 
@@ -36,6 +44,11 @@ function remove_from_all_rooms(client, callback) {
 		rooms[room].remove(client);
 		if (rooms[room].size() === 0)
 		    delete rooms[room];
+	    }
+	    if (room_users.hasOwnProperty(room)) {
+		room_users[room].remove(client.username);
+		if (room_users[room].size() === 0)
+		    delete room_users[room];
 	    }
 	    if (rooms.hasOwnProperty(room)) {
 		var this_room = rooms[room].array();
@@ -55,12 +68,8 @@ function room_clients(room) {
 }
 
 // Return list of usernames in the current room
-function room_users(room) {
-    var clients = room_clients(room);
-    var users   = new sets.Set();
-    for (var i = 0; i < clients.length; i++)
-	users.add(clients[i].username);
-    return users.array();
+exports.users_in_room = function(room) {
+    return room_users.hasOwnProperty(room) ? room_users[room].array() : [];
 }
 
 //////////////////////////////
