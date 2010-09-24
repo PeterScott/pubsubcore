@@ -54,6 +54,15 @@ function room_clients(room) {
     return rooms.hasOwnProperty(room) ? rooms[room].array() : [];
 }
 
+// Return list of usernames in the current room
+function room_users(room) {
+    var clients = room_clients(room);
+    var users   = new sets.Set();
+    for (var i = 0; i < clients.length; i++)
+	users.add(clients[i].username);
+    return users.array();
+}
+
 //////////////////////////////
 // Channel handler functions
 //////////////////////////////
