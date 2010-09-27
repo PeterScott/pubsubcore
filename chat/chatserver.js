@@ -16,8 +16,8 @@ pubsub.listen(server);
 
 // Requests to the channel "/command/list" return username lists.
 pubsub.add_handler('/command/list', function(client, msg) {
-    var usernames = pubsub.users_in_room(msg.room);
-    console.log("Users in " + msg.room + ":", sys.inspect(usernames));
+    var usernames = pubsub.users_in_room(msg.data.room);
+    console.log("Users in " + msg.data.room + ":", sys.inspect(usernames));
     client.send({users: usernames, room: '/command/list'});
 });
 
@@ -26,9 +26,11 @@ pubsub.add_handler(/.*/, function(client, msg) {
     console.log("MSG:", sys.inspect(msg));
     // Treat the channel name as the room name.
     pubsub.broadcast_room(msg.channel, {
-	name: msg.name,
-	text: msg.text,
-	room: msg.channel
+        room: msg.channel,
+        data: {
+            name: msg.data.name,
+            text: msg.data.text
+        }
     });
 });
 

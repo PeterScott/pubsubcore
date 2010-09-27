@@ -11,8 +11,7 @@ function PubSubCore(socket) {
     };
 
     this.send = function(channel, msg) {
-	msg.channel = channel;
-	self.socket.send(msg);
+	self.socket.send({channel: channel, data: msg});
     };
 
     // Raw event handlers, for clients who want them.

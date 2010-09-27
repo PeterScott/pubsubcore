@@ -42,7 +42,7 @@ $ ->
 
 # Handle a chat message: just show it in the box.
 chat_handler = (msg) ->
-  show_message msg.name, msg.text
+  show_message msg.data.name, msg.data.text
 
 # Print the user list in the chat box
 get_user_handler = (msg) ->

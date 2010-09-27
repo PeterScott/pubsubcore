@@ -37,8 +37,8 @@ You can find a fairly simple chat example in the `chat/` directory. Here is the 
     
     // Requests to the channel "/command/list" return username lists.
     pubsub.add_handler('/command/list', function(client, msg) {
-        var usernames = pubsub.users_in_room(msg.room);
-        console.log("Users in " + msg.room + ":", sys.inspect(usernames));
+        var usernames = pubsub.users_in_room(msg.data.room);
+        console.log("Users in " + msg.data.room + ":", sys.inspect(usernames));
         client.send({users: usernames, room: '/command/list'});
     });
     
@@ -47,9 +47,11 @@ You can find a fairly simple chat example in the `chat/` directory. Here is the 
         console.log("MSG:", sys.inspect(msg));
         // Treat the channel name as the room name.
         pubsub.broadcast_room(msg.channel, {
-            name: msg.name,
-            text: msg.text,
-            room: msg.channel
+            room: msg.channel,
+            data: {
+                name: msg.data.name,
+                text: msg.data.text
+            }
         });
     });
     
@@ -63,12 +65,16 @@ Requests for a user list go to the `/command/list` channel. The naming of these 
 
     // Requests to the channel "/command/list" return username lists.
     pubsub.add_handler('/command/list', function(client, msg) {
-        var usernames = pubsub.users_in_room(msg.room);
-        console.log("Users in " + msg.room + ":", sys.inspect(usernames));
+        var usernames = pubsub.users_in_room(msg.data.room);
+        console.log("Users in " + msg.data.room + ":", sys.inspect(usernames));
         client.send({users: usernames, room: '/command/list'});
     });
 
-When a message comes in to that channel, the handler function is given two arguments: a [Socket.IO](http://socket.io/) client object with an extra `username` property added, and the message in JSON format. The message has a `room` property specified by the client, telling what chat room it wants a user list for. The `pubsub.users_in_room(room)` function returns an array of all the usernames of the users in the specified room, in no particular order. The `client.send(msg)` function sends a JSON message to the specified client. Very simple.
+When a message comes in to that channel, the handler function is given two arguments: a [Socket.IO](http://socket.io/) client object with an extra `username` property added, and the message in JSON format. The message looks like this:
+
+    {channel: "/command/list", data: {room: "chat room name"}}
+
+The data property contains the message from the client, telling what chat room it wants a user list for. The `pubsub.users_in_room(room)` function returns an array of all the usernames of the users in the specified room, in no particular order. The `client.send(msg)` function sends a JSON message to the specified client.
 
 The other channel handler uses a regular expression to specify what channels it listens on. In fact, it will listen on all channels that have not been matched by a previous handler:
 
@@ -77,9 +83,11 @@ The other channel handler uses a regular expression to specify what channels it 
         console.log("MSG:", sys.inspect(msg));
         // Treat the channel name as the room name.
         pubsub.broadcast_room(msg.channel, {
-            name: msg.name,
-            text: msg.text,
-            room: msg.channel
+            room: msg.channel,
+            data: {
+                name: msg.data.name,
+                text: msg.data.text
+            }
         });
     });
 
