@@ -83,7 +83,7 @@ var handlers = [];
 // Add a handler function for a channel denoted by a given regexp. The
 // regexp can be either a regular expression object or a string. The
 // handler takes a Socket.IO client object and a JSON message as
-// arguments. The message has a room property.
+// arguments. The message is in the format {channel: 'foo', data: {...}}.
 exports.add_handler = function(regexp, handler) {
     handlers.push([regexp, handler]);
 }

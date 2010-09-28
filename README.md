@@ -95,7 +95,22 @@ This assumes that the channel name given is also the name of the room that the c
 
 Finally, we start the server. You can try it out yourself.
 
-API Reference
+Server API Reference
 ----------
 
-For now, see the code and comments in `pubsubcore.js`. Full documentation coming later.
+The `pubsubcore` module defines the following exports:
+
+* `users_in_room(room)`: Return list of the usernames of the users in the given room, or `[]` if no such room exists.
+
+* `add_handler(channel, handler)`: Add a handler function `handler` to a channel or channels, denoted by the channel specification `channel`. The channel specification is either a string or a regular expression. If `channel` is a string, then only exact string matches will go to that handler. If it's a regular expression, the handler will be called for any channel that the regular expression matches. The handler function takes two arguments: a Socket.IO `client` object and a JSON message (call it `msg`). The message has at least two properties, guaranteed: `msg.channel` is the channel to which the message was sent, and `msg.data` is the data that the client sent.
+
+* `listen(server)`: Listen on a given `http.Server` object. This uses the `socketio.listen` function to add Socket.IO hooks to `server`, and then configures Socket.IO for pubsubcore. This must be called as part of any program using pubsubcore. See the chat example above for details.
+
+* `broadcast(msg)`: Broadcast a JSON message to all clients. No processing is performed on `msg` save for stringifying it.
+
+* `broadcast_room(room, msg)`: Broadcast a JSON message to all clients in the given room `room`. Like `broadcast`, but only sends out messages to clients who are in the specified room.
+
+Client API Reference
+----------
+
+For now, see the code and comments in `pubsubcore-client.js`. Full documentation coming later.
