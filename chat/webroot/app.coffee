@@ -9,9 +9,6 @@ pubsub   = new PubSubCore()
 press_signin_button = (e) ->
   $("#signin-button").click() if e.keyCode == 13
 
-show_message = (name, text) ->
-  $('#chatwindow').append "<p><b>#{name}:</b> #{text}</p>"
-
 $ ->
   $("#username").keypress press_signin_button
   $("#chatroom").keypress press_signin_button
@@ -40,6 +37,14 @@ $ ->
         pubsub.send(chatroom, {name: username, text: text});
       $("#chatline").val ''
 
+chat_window_append = (txt) ->
+  cw = $('#chatwindow')
+  cw.append txt
+  cw.scrollTop(cw.height())
+
+show_message = (name, text) ->
+  chat_window_append "<p><b>#{name}:</b> #{text}</p>"
+
 # Handle a chat message: just show it in the box.
 chat_handler = (msg) ->
   show_message msg.data.name, msg.data.text
@@ -47,11 +52,11 @@ chat_handler = (msg) ->
 # Print the user list in the chat box
 get_user_handler = (msg) ->
   users_str = msg.users.join ', '
-  $('#chatwindow').append "<p><i><b>Users:</b> #{users_str}</i></p>"
+  chat_window_append "<p><i><b>Users:</b> #{users_str}</i></p>"
 
 # Announce the presence of a new user or connection
 pubsub.onannounce = (msg) ->
-  $('#chatwindow').append "<p><i>#{msg.name} #{msg.action}</i></p>"
+  chat_window_append "<p><i>#{msg.name} #{msg.action}</i></p>"
 
 #
 # Connection logging code

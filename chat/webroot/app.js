@@ -1,5 +1,5 @@
 (function() {
-  var chat_handler, chatroom, get_user_handler, press_signin_button, pubsub, show_message, username;
+  var chat_handler, chat_window_append, chatroom, get_user_handler, press_signin_button, pubsub, show_message, username;
   username = null;
   chatroom = null;
   pubsub = new PubSubCore();
@@ -7,9 +7,6 @@
     if (e.keyCode === 13) {
       return $("#signin-button").click();
     }
-  };
-  show_message = function(name, text) {
-    return $('#chatwindow').append("<p><b>" + (name) + ":</b> " + (text) + "</p>");
   };
   $(function() {
     $("#username").keypress(press_signin_button);
@@ -45,16 +42,25 @@
       }
     });
   });
+  chat_window_append = function(txt) {
+    var cw;
+    cw = $('#chatwindow');
+    cw.append(txt);
+    return cw.scrollTop(cw.height());
+  };
+  show_message = function(name, text) {
+    return chat_window_append("<p><b>" + (name) + ":</b> " + (text) + "</p>");
+  };
   chat_handler = function(msg) {
     return show_message(msg.data.name, msg.data.text);
   };
   get_user_handler = function(msg) {
     var users_str;
     users_str = msg.users.join(', ');
-    return $('#chatwindow').append("<p><i><b>Users:</b> " + (users_str) + "</i></p>");
+    return chat_window_append("<p><i><b>Users:</b> " + (users_str) + "</i></p>");
   };
   pubsub.onannounce = function(msg) {
-    return $('#chatwindow').append("<p><i>" + (msg.name) + " " + (msg.action) + "</i></p>");
+    return chat_window_append("<p><i>" + (msg.name) + " " + (msg.action) + "</i></p>");
   };
   pubsub.onconnect = function() {
     $("#log").append("<p>Connected to server</p>");

@@ -3,6 +3,7 @@
     border: thin black solid;
     width: 30em;
     height: 50em;
+    overflow: auto;
 }
 
 #chatline {
