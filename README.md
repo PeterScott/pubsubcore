@@ -100,6 +100,10 @@ Server API Reference
 
 The `pubsubcore` module defines the following exports:
 
+* `room_clients(room)`: Return a list of Socket.IO `client` objects in the given room, or `[]` if no such room exists.
+
+* `client_in_room(room, client)`: Return `true` if `room` contains the Socket.IO client object `client`. Return `false` if it does not, or if the given room does not exist.
+
 * `users_in_room(room)`: Return list of the usernames of the users in the given room, or `[]` if no such room exists.
 
 * `add_handler(channel, handler)`: Add a handler function `handler` to a channel or channels, denoted by the channel specification `channel`. The channel specification is either a string or a regular expression. If `channel` is a string, then only exact string matches will go to that handler. If it's a regular expression, the handler will be called for any channel that the regular expression matches. The handler function takes two arguments: a Socket.IO `client` object and a JSON message (call it `msg`). The message has at least two properties, guaranteed: `msg.channel` is the channel to which the message was sent, and `msg.data` is the data that the client sent.

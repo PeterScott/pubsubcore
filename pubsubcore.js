@@ -80,15 +80,20 @@ function remove_from_room(client, room, callback) {
 	    delete room_users[room];
     }
 
-    callback(room_clients(room));
+    callback(exports.room_clients(room));
 }
 
-// Return list of clients in the current room.
-function room_clients(room) {
+// Return list of clients in the given room.
+exports.room_clients = function(room) {
     return rooms.hasOwnProperty(room) ? rooms[room].array() : [];
 }
 
-// Return list of usernames in the current room
+// Return true if room contains the given client, false otherwise.
+exports.client_in_room = function(room, client) {
+    return rooms.hasOwnProperty(room) && rooms[room].has(client);
+}
+
+// Return list of usernames in given room
 exports.users_in_room = function(room) {
     return room_users.hasOwnProperty(room) ? room_users[room].array() : [];
 }
@@ -198,7 +203,7 @@ exports.broadcast = function(msg) {
 
 // Broadcast message to all clients in a given room.
 exports.broadcast_room = function(room, msg) {
-    var clients = room_clients(room);
+    var clients = exports.room_clients(room);
     for (var i = 0; i < clients.length; i++)
 	clients[i].send(msg);
 }
