@@ -95,7 +95,7 @@ This assumes that the channel name given is also the name of the room that the c
 
 Finally, we start the server. You can try it out yourself.
 
-Server API Reference
+Server API
 ----------
 
 The `pubsubcore` module defines the following exports:
@@ -114,7 +114,42 @@ The `pubsubcore` module defines the following exports:
 
 * `broadcast_room(room, msg)`: Broadcast a JSON message to all clients in the given room `room`. Like `broadcast`, but only sends out messages to clients who are in the specified room.
 
-Client API Reference
+Client API
 ----------
 
-For now, see the code and comments in `pubsubcore-client.js`. Full documentation coming later.
+First, include the Socket.IO and pubsubcore client code from your HTML:
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/pubsubcore-client.js"></script>
+
+Next, in your own JavaScript code, create a new `PubSubCore` object:
+
+    var pubsub = new PubSubCore();
+
+You can attach event handlers to this object, define room handlers, enter and leave rooms, and send messages to channels. If you want to use an existing Socket.IO connection, you can pass this to the constructor with `new PubSubCore(socket);`. The object has the following methods and publicly-available properties:
+
+* `connect()`: Establish a connection to the pubsubcore server. If the connection is lost, the client will automatically try to reconnect, with exponential backoff to prevent the server from being hammered with reconnection requests.
+
+* `socket`: a Socket.IO socket object, used to connect to the server. You can use this directly if you know what you're doing. The client code is not particularly long or hard to understand, so don't be afraid to hack it if it doesn't do quite what you want it to.
+
+* `connected`: a boolean variable; `true` if we're connected to the server, `false` otherwise.
+
+* `join_room(username, room)`: Enter a room with the given name, using the specified username. You may only use a single username; if you try to use more than one username, the server may call you by the wrong username.
+
+* `leave_room(room)`: Leave the given room. If we're not in that room to start with, then this does nothing.
+
+* `send(channel, msg)`: Send a given message to `channel`. The channel is a string; the message is anything that can be serialized to JSON format.
+
+* `add_handler(room, handler)`: Add a handler function `handler` to a room or rooms, denoted by the room specification `room`. The room specification is either a string or a regular expression. If `room` is a string, then only exact string matches will go to that handler. If it's a regular expression, the handler will be called for any room that the regular expression matches. The handler function takes one argument: a JSON message (call it `msg`). The message has at least two properties, guaranteed: `msg.room` is the room to which the message was sent, and `msg.data` is the data that the server sent.
+
+* `default_handler`: a handler function that is called if no other handler matches the name of the room in an incoming message. By default, this function does nothing. You can override it if you wish.
+
+* `onconnect`: a function with no arguments, called when a connection is established. Does nothing by default.
+
+* `ondisconnect`: a function with no arguments, called when a connection is lost. Does nothing by default.
+
+* `onmessage`: a function with one argument, `msg`, called when a message is received. Does nothing by default.
+
+* `onerror`: a function with one argument, `msg`, called when an error message is received from the server. Logs the error message with `console.log()` by default.
+
+* `onannounce`: a function with one argument, `msg`, called when an announcement message is received from the server. Logs the announcement message with `console.log()` by default.
