@@ -10,6 +10,10 @@ function PubSubCore(socket) {
 	self.socket.send({connect: {name: username, room: room}});
     };
 
+    this.leave_room = function(room) {
+	self.socket.send({leave_room: room});
+    };
+
     this.send = function(channel, msg) {
 	self.socket.send({channel: channel, data: msg});
     };

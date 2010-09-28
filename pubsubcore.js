@@ -15,8 +15,7 @@ var room_users = {};
 // Dict mapping sids to sets of rooms.
 var sid_rooms = {};
 
-// Add a client to a room, both in Redis and to the rooms object, and
-// return the sid:client mapping.
+// Add a client to a room and return the sid:client mapping.
 function add_to_room(client, room, callback) {
     console.log('Client ' + client.username + ' (' + client.sessionId + ') added to room ' + room);
 
@@ -32,8 +31,8 @@ function add_to_room(client, room, callback) {
     callback(rooms[room].array());
 }
 
-// Remove a client from all rooms, both in Redis and to the rooms object,
-// and return the username:client mapping for everybody in those rooms.
+// Remove a client from all rooms and return the username:client
+// mapping for everybody in those rooms.
 function remove_from_all_rooms(client, callback) {
     var affected_clients = new sets.Set();
     if (sid_rooms.hasOwnProperty(client.sessionId)) {
@@ -60,6 +59,28 @@ function remove_from_all_rooms(client, callback) {
     console.log('Client ' + client.username + ' (' + client.sessionId + ') disconnected.');
     delete sid_rooms[client.sessionId];
     callback(affected_clients.array());
+}
+
+// Remove a client from a room and return the username:client mapping
+// for everybody in that room. Returns [] if the room does not exist,
+// or if the client was not in the room to begin with.
+function remove_from_room(client, room, callback) {
+    if (!rooms.hasOwnProperty(room) || !rooms[room].has(client)) {
+	callback([]);
+	return;
+    }
+    
+    // Delete from the room
+    rooms[room].remove(client);
+    if (rooms[room].size() === 0)
+	delete rooms[room];
+    if (room_users.hasOwnProperty(room)) {
+	room_users[room].remove(client.username);
+	if (room_users[room].size() === 0)
+	    delete room_users[room];
+    }
+
+    callback(room_clients(room));
 }
 
 // Return list of clients in the current room.
@@ -132,6 +153,17 @@ exports.listen = function(server) {
 			    });
 		    });
 		}
+	    } else if (msg.hasOwnProperty('leave_room')) {
+		remove_from_room(client, msg.leave_room, function(clients) {
+		    console.log(client.username + ' disconnected, yo');
+		    console.log(clients);
+		    for (var i = 0; i < clients.length; i++)
+			clients[i].send({
+			    announcement: true,
+			    name: client.username || 'anonymous',
+			    action: 'disconnected'
+			});
+		});
 	    } else {
 		// Dispatch to channel handler function
 		if (!msg.channel) {
