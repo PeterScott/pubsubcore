@@ -4,5 +4,8 @@
   "author": "Peter Scott <pjscott@iastate.edu>",
   "main": "./pubsubcore.js",
   "repository": {"type": "git", "url": "http://github.com/PeterScott/pubsubcore.git"},
-  "homepage": "http://github.com/PeterScott/pubsubcore"
+  "homepage": "http://github.com/PeterScott/pubsubcore",
+  "dependencies": {
+      "simplesets" : ">=1.1.4"
+  }
 }
