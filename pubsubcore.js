@@ -3,6 +3,7 @@
 var sys  = require('sys');
 var sets = require('simplesets');
 var io   = require('socket.io');
+var net  = require('net');
 
 //////////////////////////////
 // Tracking who's in what room
@@ -129,58 +130,31 @@ function get_handler(channel) {
     };
 }
 
-//////////////////////////////
-// Socket.IO server setup
-//////////////////////////////
+// Generic server code
 
-var socket;
-
-// Call this function on an HTTP server object to add the hooks.
-exports.listen = function(server) {
-    socket = io.listen(server);
-    
-    socket.on('connection', function(client) {
-	client.on('message', function(msg) {
-	    if (msg.hasOwnProperty('connect')) {
-		if (!(msg.connect.name && msg.connect.room)) {
-		    console.log("Invalid connect message:", msg);
-		    client.send({error: "Invalid connect message"});
-		} else {
-		    client.username = msg.connect.name;
-		    // Add user info to the current dramatis personae
-		    add_to_room(client, msg.connect.room, function(clients) {
-			// Broadcast new-user notification
-			for (var i = 0; i < clients.length; i++)
-			    clients[i].send({
-				announcement: true,
-				name: client.username,
-				action: 'connected'
-			    });
-		    });
-		}
-	    } else if (msg.hasOwnProperty('leave_room')) {
-		remove_from_room(client, msg.leave_room, function(clients) {
-		    console.log(client.username + ' disconnected, yo');
-		    console.log(clients);
+function on_message_handler(client) {
+    return function(msg) {
+	if (msg.hasOwnProperty('connect')) {
+	    if (!(msg.connect.name && msg.connect.room)) {
+		console.log("Invalid connect message:", msg);
+		client.send({error: "Invalid connect message"});
+	    } else {
+		client.username = msg.connect.name;
+		// Add user info to the current dramatis personae
+		add_to_room(client, msg.connect.room, function(clients) {
+		    // Broadcast new-user notification
 		    for (var i = 0; i < clients.length; i++)
 			clients[i].send({
 			    announcement: true,
-			    name: client.username || 'anonymous',
-			    action: 'disconnected'
+			    name: client.username,
+			    action: 'connected'
 			});
 		});
-	    } else {
-		// Dispatch to channel handler function
-		if (!msg.channel) {
-		    console.log("Unknown channel for message:", sys.inspect(msg));
-		    client.send({error: 'Unknown channel "' + msg.channel + '"'});
-		} else {
-		    get_handler(msg.channel)(client, msg);
-		}
 	    }
-	});
-	client.on('disconnect', function() {
-	    remove_from_all_rooms(client, function(clients) {
+	} else if (msg.hasOwnProperty('leave_room')) {
+	    remove_from_room(client, msg.leave_room, function(clients) {
+		console.log(client.username + ' disconnected, yo');
+		console.log(clients);
 		for (var i = 0; i < clients.length; i++)
 		    clients[i].send({
 			announcement: true,
@@ -188,8 +162,111 @@ exports.listen = function(server) {
 			action: 'disconnected'
 		    });
 	    });
+	} else {
+	    // Dispatch to channel handler function
+	    if (!msg.channel) {
+		console.log("Unknown channel for message:", sys.inspect(msg));
+		client.send({error: 'Unknown channel "' + msg.channel + '"'});
+	    } else {
+		get_handler(msg.channel)(client, msg);
+	    }
+	}
+    };
+}
+
+function on_disconnect_handler(client) {
+    return function() {
+	remove_from_all_rooms(client, function(clients) {
+	    for (var i = 0; i < clients.length; i++)
+		clients[i].send({
+		    announcement: true,
+		    name: client.username || 'anonymous',
+		    action: 'disconnected'
+		});
+	});
+    };
+}
+
+//////////////////////////////
+// Socket.IO and net server setup
+//////////////////////////////
+
+var socket;
+var net_server;
+var net_server_streams = new sets.Set();
+
+// Assume that text contains all or part of a JSON dict. If it
+// contains all of one, then return the index of the character after
+// its closing curly brace. If there is part of another message after
+// it, ignore that.
+function find_closing_brace(text) {
+    // Make sure we have at least one opening brace, and start there
+    var i = text.indexOf('{');
+    if (i < 0) return null;
+
+    var level = 1;
+    for (i = i + 1; i < text.length; i++) {
+	var c = text.charAt(i);
+	if (c == '{') level++;
+	else if (c == '}') level--;
+
+	if (level == 0) return i+1;
+    }
+
+    return null;
+}
+
+// Call this function on an HTTP server object to add the hooks.
+exports.listen = function(server, net_port, net_host) {
+    socket = io.listen(server);
+    
+    socket.on('connection', function(client) {
+	client.on('message', on_message_handler(client));
+	client.on('disconnect', on_disconnect_handler(client));
+    });
+
+    // If neither host nor port are specified for the net connection,
+    // don't make it.
+    if (!net_port && !net_host) return;
+
+    var sid_counter = 0;
+
+    net_server = net.createServer(function(stream) {
+	var buf = '';
+	stream.setEncoding('utf8');
+	stream.setNoDelay(true);
+	net_server_streams.add(stream);
+
+	var client = {
+	    sessionId: 'net-' + sid_counter,
+	    username: 'anonymous-' + sid_counter,
+	    send: function(msg) {
+		stream.write(JSON.stringify(msg)+'\r\n');
+	    }
+	};
+	sid_counter++;
+
+	stream.on('data', function(data) {
+	    buf += data;
+	    var pos = find_closing_brace(buf);
+	    if (pos) {
+		try {
+		    var msg = JSON.parse(buf.substring(0, pos));
+		    on_message_handler(client)(msg);
+		} catch (e) {
+		    stream.write('{"error":"Invalid JSON"}\r\n');
+		}
+		buf = buf.substring(pos);
+	    }
+	});
+
+	stream.on('end', function() {
+	    on_disconnect_handler(client);
+	    net_server_streams.remove(stream);
 	});
     });
+
+    net_server.listen(net_port || 8125, net_host || 'localhost');
 };
 
 //////////////////////////////
@@ -199,6 +276,9 @@ exports.listen = function(server) {
 // Broadcast message to all clients
 exports.broadcast = function(msg) {
     if (socket) socket.broadcast(msg);
+    net_server_streams.each(function(stream) {
+	stream.write(JSON.stringify(msg)+'\r\n');
+    });
 };
 
 // Broadcast message to all clients in a given room.

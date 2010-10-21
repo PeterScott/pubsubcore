@@ -11,8 +11,10 @@ var server = http.createServer(function(request, response) {
     paperboy.deliver(WEB_ROOT, request, response);
 });
 
-// Attach pubsubcore to the HTTP server.
-pubsub.listen(server);
+// Attach pubsubcore to the HTTP server. Also create a simple TCP
+// server on localhost:9199, which you can connect to with telnet or
+// something, and send and receive JSON.
+pubsub.listen(server, 9199, 'localhost');
 
 // Requests to the channel "/command/list" return username lists.
 pubsub.add_handler('/command/list', function(client, msg) {
