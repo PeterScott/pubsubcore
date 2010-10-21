@@ -1,5 +1,5 @@
 { "name": "pubsubcore",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Lightweight pub/sub core, built on Socket.IO and node.js",
   "author": "Peter Scott <pjscott@iastate.edu>",
   "main": "./pubsubcore.js",
