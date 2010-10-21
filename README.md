@@ -110,7 +110,7 @@ The `pubsubcore` module defines the following exports:
 
 * `listen(server)`: Listen on a given `http.Server` object. This uses the `socketio.listen` function to add Socket.IO hooks to `server`, and then configures Socket.IO for pubsubcore. This must be called as part of any program using pubsubcore. See the chat example above for details.
 
-* `listen(server, tcp\_port, tcp\_host)`: The same as `listen(server)`, but also opens up a TCP server on the given port of the specified host. If the host is not given, it defaults to listening on localhost. Clients who connect to the TCP server can send and receive JSON messages. This is useful for debugging or for interoperating with networked programs that aren't web browsers.
+* `listen_tcp(host, port)`: Create a TCP server on the given port, on the given host. If host is not given, it defaults to localhost. If port is not given, it defaults to 9199. Clients who connect to the TCP server can send and receive JSON messages. This is useful for debugging or for interoperating with networked programs that aren't web browsers.
 
 * `broadcast(msg)`: Broadcast a JSON message to all clients. No processing is performed on `msg` save for stringifying it.
 

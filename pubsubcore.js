@@ -217,18 +217,21 @@ function find_closing_brace(text) {
 }
 
 // Call this function on an HTTP server object to add the hooks.
-exports.listen = function(server, net_port, net_host) {
+exports.listen = function(server) {
     socket = io.listen(server);
     
     socket.on('connection', function(client) {
 	client.on('message', on_message_handler(client));
 	client.on('disconnect', on_disconnect_handler(client));
     });
+};
 
-    // If neither host nor port are specified for the net connection,
-    // don't make it.
-    if (!net_port && !net_host) return;
-
+// Create a TCP server on the given port, on the given host. If host
+// is not given, it defaults to localhost. If port is not given, it
+// defaults to 9199. Clients who connect to the TCP server can send
+// and receive JSON messages. This is useful for debugging or for
+// interoperating with networked programs that aren't web browsers.
+exports.listen_tcp = function(port, host) {
     var sid_counter = 0;
 
     net_server = net.createServer(function(stream) {
@@ -266,8 +269,8 @@ exports.listen = function(server, net_port, net_host) {
 	});
     });
 
-    net_server.listen(net_port || 8125, net_host || 'localhost');
-};
+    net_server.listen(port || 9199, host || 'localhost');
+}
 
 //////////////////////////////
 // Broadcasting functions

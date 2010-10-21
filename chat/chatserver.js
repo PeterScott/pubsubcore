@@ -11,10 +11,8 @@ var server = http.createServer(function(request, response) {
     paperboy.deliver(WEB_ROOT, request, response);
 });
 
-// Attach pubsubcore to the HTTP server. Also create a simple TCP
-// server on localhost:9199, which you can connect to with telnet or
-// something, and send and receive JSON.
-pubsub.listen(server, 9199, 'localhost');
+// Attach pubsubcore to the HTTP server.
+pubsub.listen(server);
 
 // Requests to the channel "/command/list" return username lists.
 pubsub.add_handler('/command/list', function(client, msg) {
@@ -38,6 +36,9 @@ pubsub.add_handler(/.*/, function(client, msg) {
 	});
 });
 
-// Start the server
+// Start the HTTP server on port 8124, as well as a raw TCP server on
+// port 9199.
 server.listen(8124);
-console.log('Server running at http://127.0.0.1:8124/');
+pubsub.listen_tcp(9199, 'localhost');
+console.log('Socket.IO Server running at http://127.0.0.1:8124/');
+console.log('TCP Server running at 127.0.0.1:9199');
