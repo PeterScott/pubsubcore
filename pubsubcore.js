@@ -2,7 +2,7 @@
 
 var sys  = require('sys');
 var sets = require('simplesets');
-var io   = require('socket.io')
+var io   = require('socket.io');
 
 //////////////////////////////
 // Tracking who's in what room
@@ -86,17 +86,17 @@ function remove_from_room(client, room, callback) {
 // Return list of clients in the given room.
 exports.room_clients = function(room) {
     return rooms.hasOwnProperty(room) ? rooms[room].array() : [];
-}
+};
 
 // Return true if room contains the given client, false otherwise.
 exports.client_in_room = function(room, client) {
     return rooms.hasOwnProperty(room) && rooms[room].has(client);
-}
+};
 
 // Return list of usernames in given room
 exports.users_in_room = function(room) {
     return room_users.hasOwnProperty(room) ? room_users[room].array() : [];
-}
+};
 
 //////////////////////////////
 // Channel handler functions
@@ -112,7 +112,7 @@ var handlers = [];
 // arguments. The message is in the format {channel: 'foo', data: {...}}.
 exports.add_handler = function(regexp, handler) {
     handlers.push([regexp, handler]);
-}
+};
 
 // Return the handler function for a given channel, or a default
 // handler if none was found.
@@ -126,7 +126,7 @@ function get_handler(channel) {
     // If no handler was found, return a default function.
     return function(client, msg) {
 	client.send({error: 'No handler for channel "' + channel + '"'});
-    }
+    };
 }
 
 //////////////////////////////
@@ -190,7 +190,7 @@ exports.listen = function(server) {
 	    });
 	});
     });
-}
+};
 
 //////////////////////////////
 // Broadcasting functions
@@ -199,11 +199,11 @@ exports.listen = function(server) {
 // Broadcast message to all clients
 exports.broadcast = function(msg) {
     if (socket) socket.broadcast(msg);
-}
+};
 
 // Broadcast message to all clients in a given room.
 exports.broadcast_room = function(room, msg) {
     var clients = exports.room_clients(room);
     for (var i = 0; i < clients.length; i++)
 	clients[i].send(msg);
-}
+};
