@@ -270,7 +270,7 @@ exports.listen_tcp = function(port, host) {
     });
 
     net_server.listen(port || 9199, host || 'localhost');
-}
+};
 
 //////////////////////////////
 // Broadcasting functions
