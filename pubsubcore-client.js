@@ -6,12 +6,20 @@ function PubSubCore(socket) {
     var self = this;
     this.connected = false;
 
+    // A list of [username, room] pairs, for the rooms we're in now.
+    this.rooms_joined = [];
+
     this.join_room = function(username, room) {
 	self.socket.send({connect: {name: username, room: room}});
+	self.rooms_joined.push([username, room]);
     };
 
     this.leave_room = function(room) {
 	self.socket.send({leave_room: room});
+	// Remove us from rooms_joined
+	for (var i = 0; i < self.rooms_joined.length; i++)
+	    if (self.rooms_joined[i][1] === room)
+		self.rooms_joined.splice(i, 1);
     };
 
     this.send = function(channel, msg) {
@@ -69,6 +77,9 @@ function PubSubCore(socket) {
     this.socket.on('connect', function() {
 	self.connected = true;
 	console.log("PubSubCore: Connected to server");
+	// Rejoin any rooms we're in
+	for (var i = 0; i < self.rooms_joined.length; i++)
+	    self.socket.send({connect: {name: self.rooms_joined[i][0], room: self.rooms_joined[i][1]}});
 	self.onconnect();
     });
 
