@@ -1,7 +1,7 @@
 // Chat server using pubsubcore
 var http     = require('http');
 var path     = require('path');
-var sys      = require('sys');
+var util     = require('util');
 var pubsub   = require('pubsubcore');
 var paperboy = require('paperboy');
 
@@ -17,13 +17,13 @@ pubsub.listen(server);
 // Requests to the channel "/command/list" return username lists.
 pubsub.add_handler('/command/list', function(client, msg) {
     var usernames = pubsub.users_in_room(msg.data.room);
-    console.log("Users in " + msg.data.room + ":", sys.inspect(usernames));
+    console.log("Users in " + msg.data.room + ":", util.inspect(usernames));
     client.send({users: usernames, room: '/command/list'});
 });
 
 // Requests to any other channel are treated as chat messages.
 pubsub.add_handler(/.*/, function(client, msg) {
-    console.log("MSG:", sys.inspect(msg));
+    console.log("MSG:", util.inspect(msg));
     // Treat the channel name as the room name. Turn away messages
     // from clients who aren't in the room.
     if (pubsub.client_in_room(msg.channel, client))

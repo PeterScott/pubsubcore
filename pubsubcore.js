@@ -1,6 +1,6 @@
 // PubSubCore: Simple pub/sub library for Node.js and Socket.IO
 
-var sys  = require('sys');
+var util = require('util');
 var sets = require('simplesets');
 var io   = require('socket.io');
 var net  = require('net');
@@ -165,7 +165,7 @@ function on_message_handler(client) {
 	} else {
 	    // Dispatch to channel handler function
 	    if (!msg.channel) {
-		console.log("Unknown channel for message:", sys.inspect(msg));
+		console.log("Unknown channel for message:", util.inspect(msg));
 		client.send({error: 'Unknown channel "' + msg.channel + '"'});
 	    } else {
 		get_handler(msg.channel)(client, msg);
